@@ -1,6 +1,5 @@
 use std::env;
 use std::fs;
-use std::print;
 use std::process;
 
 fn main() {
@@ -20,10 +19,7 @@ fn main() {
 
     let urls = extract_urls_from_bookmark_html(&content);
 
-    print!("Found {} URLs:\n", urls.len());
-    for url in urls {
-        print!("{}\n", url);
-    }
+    print_list_of_strings(urls);
 }
 
 
@@ -40,4 +36,12 @@ fn extract_urls_from_bookmark_html(content: &str) -> Vec<String> {
             return Some(url.to_string());
         })
         .collect();
+}
+
+
+fn print_list_of_strings(list: Vec<String>) {
+    println!("Found {} URLs:", list.len());
+    for url in list {
+        println!("{}", url);
+    }
 }
