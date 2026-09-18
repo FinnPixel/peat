@@ -19,6 +19,7 @@ fn main() {
 
     let urls = extract_urls_from_bookmark_html(&content);
 
+    println!("Found {} URLs:", urls.len());
     print_list_of_strings(urls);
 }
 
@@ -40,7 +41,6 @@ fn extract_urls_from_bookmark_html(content: &str) -> Vec<String> {
 
 
 fn print_list_of_strings(list: Vec<String>) {
-    println!("Found {} URLs:", list.len());
     for url in list {
         println!("{}", url);
     }
