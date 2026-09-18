@@ -25,7 +25,7 @@ fn main() {
 
 
 fn extract_urls_from_bookmark_html(content: &str) -> Vec<String> {
-    println!("Parsing {} bytes of HTML...", content.len());
+    println!("Parsing {} bytes of HTML...\n", content.len());
     return content
         .lines()
         .filter_map(|line| {
