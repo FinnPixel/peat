@@ -10,11 +10,15 @@ and which don't.
 ```sh
 git clone https://github.com/FinnPixel/peat.git
 cd peat
-cargo build --release
+cargo install --path .
 ```
-
-## Usage
 
 ```sh
 peat <path-to-bookmarks.html>
+```
+
+## Run without installing
+
+```sh
+cargo run --release -- <path-to-bookmarks.html>
 ```
