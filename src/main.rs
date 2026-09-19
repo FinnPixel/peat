@@ -1,6 +1,9 @@
-use std::env;
-use std::fs;
-use std::process;
+use std::{env, fs, process};
+
+mod bookmarks;
+mod checker;
+mod output;
+
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -17,31 +20,15 @@ fn main() {
         process::exit(1);
     });
 
-    let urls = extract_urls_from_bookmark_html(&content);
+    let mut urls = bookmarks::extract_urls_from_bookmark_html(&content);
+    urls.sort();
+    urls.dedup();
 
-    println!("Found {} URLs:", urls.len());
-    print_list_of_strings(urls);
-}
+    let (live_urls, dead_urls) = checker::get_live_dead_urls(urls);
 
-
-fn extract_urls_from_bookmark_html(content: &str) -> Vec<String> {
-    println!("Parsing {} bytes of HTML...\n", content.len());
-    return content
-        .lines()
-        .filter_map(|line| {
-            let start = line
-                .find("HREF=\"")
-                .or_else(|| line.find("href=\""))? + 6;
-            let rest = &line[start..];
-            let (url, _) = rest.split_once('"')?;
-            return Some(url.to_string());
-        })
-        .collect();
-}
-
-
-fn print_list_of_strings(list: Vec<String>) {
-    for url in list {
-        println!("{}", url);
-    }
+    println!("Found {} URLs:\n", live_urls.len() + dead_urls.len());
+    println!("Live ({}):", live_urls.len());
+    output::print_list_of_strings(live_urls);
+    println!("Dead ({}):", dead_urls.len());
+    output::print_list_of_strings(dead_urls);
 }
