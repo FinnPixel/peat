@@ -24,11 +24,6 @@ fn main() {
     urls.sort();
     urls.dedup();
 
-    let (live_urls, dead_urls) = checker::get_live_dead_urls(urls);
-
-    println!("Found {} URLs:\n", live_urls.len() + dead_urls.len());
-    println!("Live ({}):", live_urls.len());
-    output::print_list_of_strings(live_urls);
-    println!("Dead ({}):", dead_urls.len());
-    output::print_list_of_strings(dead_urls);
+    let results = checker::check_all(urls);
+    output::print_report(&results);
 }

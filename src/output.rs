@@ -1,6 +1,35 @@
-pub fn print_list_of_strings(list: Vec<String>) {
-    for url in list {
-        println!("{}", url);
+use crate::checker::{CheckResult, LinkStatus};
+
+const ORDER: [LinkStatus; 7] = [
+    LinkStatus::NotFound,
+    LinkStatus::DnsFailure,
+    LinkStatus::Unreachable,
+    LinkStatus::TlsFailure,
+    LinkStatus::ServerError,
+    LinkStatus::Blocked,
+    LinkStatus::Alive,
+];
+
+
+pub fn print_report(results: &[CheckResult]) {
+    println!("Checked {} URLs\n", results.len());
+
+    for status in ORDER {
+        let group: Vec<&CheckResult> =
+            results.iter().filter(|r| r.status == status).collect();
+
+        if group.is_empty() {
+            continue;
+        }
+
+        println!("{} ({}):", status.label(), group.len());
+        for result in group {
+            if status == LinkStatus::Alive {
+                println!("  {}", result.url);
+            } else {
+                println!("  {} ({})", result.url, result.detail);
+            }
+        }
+        println!();
     }
-    print!("\n");
 }
