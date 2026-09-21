@@ -1,4 +1,4 @@
-use std::sync::{mpsc, Mutex};
+use std::sync::{Mutex};
 use std::thread;
 use std::time::Duration;
 use ureq::Agent;
@@ -40,38 +40,41 @@ pub struct CheckResult {
 }
 
 
-pub fn check_all(urls: Vec<String>) -> Vec<CheckResult> {
+pub fn check_all(mut urls: Vec<String>) -> Vec<CheckResult> {
+    urls.sort_unstable();
+    urls.dedup();
+ 
     let agent: Agent = Agent::config_builder()
         .timeout_global(Some(Duration::from_secs(10)))
         .http_status_as_error(false)
         .build()
         .into();
-
-    println!("Checking {} URLs...\n", urls.len());
-
+ 
+    let workers = WORKERS.min(urls.len());
     let queue = Mutex::new(urls.into_iter());
-    let (tx, rx) = mpsc::channel();
-
+    let next_url = || queue.lock().unwrap().next();
+ 
     let mut results: Vec<CheckResult> = thread::scope(|scope| {
-        for _ in 0..WORKERS {
-            let tx = tx.clone();
-            let queue = &queue;
-            let agent = &agent;
-
-            scope.spawn(move || loop {
-                let Some(url) = queue.lock().unwrap().next() else {
-                    break;
-                };
-                let (status, detail) = check_url(agent, &url);
-                tx.send(CheckResult { url, status, detail }).unwrap();
-            });
-        }
-
-        drop(tx);
-        rx.iter().collect()
+        let handles: Vec<_> = (0..workers)
+            .map(|_| {
+                scope.spawn(|| {
+                    let mut checked = Vec::new();
+                    while let Some(url) = next_url() {
+                        let (status, detail) = check_url(&agent, &url);
+                        checked.push(CheckResult { url, status, detail });
+                    }
+                    checked
+                })
+            })
+            .collect();
+ 
+        handles
+            .into_iter()
+            .flat_map(|handle| handle.join().unwrap())
+            .collect()
     });
-
-    results.sort_by(|a, b| a.url.cmp(&b.url));
+ 
+    results.sort_unstable_by(|a, b| a.url.cmp(&b.url));
     results
 }
 
