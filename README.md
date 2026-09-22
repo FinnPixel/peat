@@ -1,10 +1,8 @@
 # peat
 
-A small CLI tool that checks your browser bookmarks for dead links.\
-Designed to be lightweight and efficient.
+Small CLI tool that checks your browser bookmarks for dead links.
 
-Point it at an exported bookmarks file and it reports which URLs still respond
-and which don't.\
+Point it at an exported bookmarks file and it reports which URLs are still alive.
 
 Also supports .txt and .md files with newline-separated URLs.
 
