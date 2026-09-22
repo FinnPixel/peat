@@ -2,7 +2,7 @@
 
 Small CLI tool that checks your browser bookmarks for dead links.
 
-Point it at an exported bookmarks file and it reports which URLs are still alive.
+Point it at an exported bookmarks file to know which URLs are still alive.
 
 ## Install
 
