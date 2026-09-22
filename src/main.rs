@@ -9,7 +9,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
-        eprintln!("Usage: peat <path-to-bookmarks.html>");
+        eprintln!("Usage: peat <path-to-bookmarks.html|.txt|.md>");
         process::exit(1);
     }
 
@@ -20,9 +20,7 @@ fn main() {
         process::exit(1);
     });
 
-    let mut urls = bookmarks::extract_urls_from_bookmark_html(&content);
-    urls.sort();
-    urls.dedup();
+    let urls = bookmarks::extract_urls(file_path, &content);
 
     let results = checker::check_all(urls);
     output::print_report(&results);

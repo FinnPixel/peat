@@ -1,3 +1,4 @@
 [alias]
-rf = "run tests/fixtures/sample_bookmarks_large_00.html"
+rf-html = "run tests/fixtures/sample_bookmarks_large_00.html"
+rf-txt = "run tests/fixtures/sample_bookmarks_00.txt"
 check-all = "clippy -- -D warnings"

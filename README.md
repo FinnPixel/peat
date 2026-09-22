@@ -3,8 +3,8 @@
 A small CLI tool that checks your browser bookmarks for dead links.\
 Designed to be lightweight and efficient.
 
-Point it at an exported bookmarks file and it reports which URLs still respond
-and which don't.
+Point it at an exported bookmarks file, or a `.txt`/`.md` file with one URL per
+line, and it reports which URLs still respond and which don't.
 
 ## Install
 
@@ -15,7 +15,7 @@ cargo install --path .
 ```
 
 ```sh
-peat <path-to-bookmarks.html>
+peat <path-to-bookmarks.html>   # or a .txt/.md list of URLs
 ```
 
 ## Run without installing

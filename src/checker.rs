@@ -41,6 +41,7 @@ pub struct CheckResult {
 
 
 pub fn check_all(mut urls: Vec<String>) -> Vec<CheckResult> {
+    println!("Checking {} urls ...\n", urls.len());
     urls.sort_unstable();
     urls.dedup();
  

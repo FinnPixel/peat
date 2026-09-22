@@ -12,7 +12,8 @@ const ORDER: [LinkStatus; 7] = [
 
 
 pub fn print_report(results: &[CheckResult]) {
-    println!("Checked {} URLs\n", results.len());
+    println!("------------ REPORT ------------");
+    println!("Total: {} URLs.\n", results.len());
 
     for status in ORDER {
         let group: Vec<&CheckResult> =
