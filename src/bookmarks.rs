@@ -17,13 +17,13 @@ pub fn extract_urls(file_path: &str, content: &str) -> Vec<String> {
     };
     urls.sort();
     urls.dedup();
-    return urls;
+    urls
 }
 
 
 fn extract_urls_from_bookmark_html(content: &str) -> Vec<String> {
     println!("Parsing {} bytes of HTML...\n", content.len());
-    return content
+    content
         .lines()
         .filter_map(|line| {
             let start = line
@@ -31,27 +31,27 @@ fn extract_urls_from_bookmark_html(content: &str) -> Vec<String> {
                 .or_else(|| line.find("href=\""))? + 6;
             let rest = &line[start..];
             let (url, _) = rest.split_once('"')?;
-            return Some(url.to_string());
+            Some(url.to_string())
         })
         .filter(|url| is_http_url(url))
-        .collect();
+        .collect()
 }
 
 
 fn extract_urls_from_markdown(content: &str) -> Vec<String> {
     println!("Parsing {} bytes of Markdown...\n", content.len());
-    return content.lines().flat_map(scan_http_urls).collect();
+    content.lines().flat_map(scan_http_urls).collect()
 }
 
 
 fn extract_urls_from_lines(content: &str) -> Vec<String> {
     println!("Parsing {} bytes of text...\n", content.len());
-    return content
+    content
         .lines()
         .map(str::trim)
         .filter(|line| is_http_url(line))
         .map(str::to_string)
-        .collect();
+        .collect()
 }
 
 
@@ -74,13 +74,13 @@ fn scan_http_urls(line: &str) -> Vec<String> {
             pos = start + "http".len();
         }
     }
-    return urls;
+    urls
 }
 
 
 fn is_http_url(url: &str) -> bool {
-    return ["http://", "https://"].iter().any(|scheme| {
+    ["http://", "https://"].iter().any(|scheme| {
         url.len() > scheme.len()
             && url.get(..scheme.len()).is_some_and(|prefix| prefix.eq_ignore_ascii_case(scheme))
-    });
+    })
 }
