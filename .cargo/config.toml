@@ -2,4 +2,4 @@
 rf-html = "run tests/fixtures/sample_bookmarks_large_00.html"
 rf-txt = "run tests/fixtures/sample_bookmarks_00.txt"
 rf-md = "run tests/fixtures/sample_bookmarks_00.md"
-check-all = "clippy -- -D warnings"
+check-all = "clippy --all-targets -- -D warnings"
