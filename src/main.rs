@@ -1,8 +1,6 @@
 use std::{env, fs, process};
 
-mod bookmarks;
-mod checker;
-mod output;
+use peat::{bookmarks, checker, output};
 
 
 fn main() {
