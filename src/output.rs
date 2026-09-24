@@ -1,12 +1,13 @@
 use crate::checker::{CheckResult, LinkStatus};
 
-const ORDER: [LinkStatus; 7] = [
+const ORDER: [LinkStatus; 8] = [
     LinkStatus::NotFound,
     LinkStatus::DnsFailure,
     LinkStatus::Unreachable,
     LinkStatus::TlsFailure,
     LinkStatus::ServerError,
     LinkStatus::Blocked,
+    LinkStatus::Moved,
     LinkStatus::Alive,
 ];
 
@@ -27,6 +28,8 @@ pub fn print_report(results: &[CheckResult]) {
         for result in group {
             if status == LinkStatus::Alive {
                 println!("  {}", result.url);
+            } else if status == LinkStatus::Moved {
+                println!("  {} → {}", result.url, result.detail);
             } else {
                 println!("  {} ({})", result.url, result.detail);
             }

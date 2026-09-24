@@ -1,7 +1,7 @@
 use std::sync::{Mutex};
 use std::thread;
 use std::time::Duration;
-use ureq::Agent;
+use ureq::{Agent, ResponseExt};
 
 const USER_AGENT: &str = "peat/0.1 (+https://github.com/you/peat)";
 
@@ -10,6 +10,7 @@ const WORKERS: usize = 64;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LinkStatus {
     Alive,
+    Moved,
     NotFound,
     Blocked,
     ServerError,
@@ -22,6 +23,7 @@ impl LinkStatus {
     pub fn label(&self) -> &'static str {
         match self {
             LinkStatus::Alive => "alive",
+            LinkStatus::Moved => "moved",
             LinkStatus::NotFound => "not found",
             LinkStatus::Blocked => "blocked",
             LinkStatus::ServerError => "server error",
@@ -114,6 +116,10 @@ fn attempt_once(agent: &Agent, url: &str) -> (LinkStatus, String) {
                 500..=599 => LinkStatus::ServerError,
                 _ => LinkStatus::Alive,
             };
+            let final_url = resp.get_uri().to_string();
+            if status == LinkStatus::Alive && is_real_move(url, &final_url) {
+                return (LinkStatus::Moved, final_url);
+            }
             (status, code.to_string())
         }
 
@@ -126,6 +132,34 @@ fn attempt_once(agent: &Agent, url: &str) -> (LinkStatus, String) {
             (classify_error(&detail), detail)
         }
     }
+}
+
+
+fn is_real_move(original: &str, final_url: &str) -> bool {
+    let (orig_host, orig_path) = host_and_path(original);
+    let (final_host, final_path) = host_and_path(final_url);
+    if site(&orig_host) != site(&final_host) {
+        return true;
+    }
+    let orig_path = orig_path.trim_end_matches('/');
+    !orig_path.is_empty() && orig_path != final_path.trim_end_matches('/')
+}
+
+
+fn host_and_path(url: &str) -> (String, &str) {
+    let url = url.split(['#', '?']).next().unwrap_or(url);
+    let rest = url.split_once("://").map_or(url, |(_, rest)| rest);
+    let (authority, path) = rest.find('/').map_or((rest, ""), |i| rest.split_at(i));
+    let host = authority.rsplit('@').next().unwrap_or(authority);
+    let host = host.split(':').next().unwrap_or(host);
+    (host.to_ascii_lowercase(), path)
+}
+
+
+fn site(host: &str) -> String {
+    let mut labels: Vec<&str> = host.trim_end_matches('.').rsplit('.').take(2).collect();
+    labels.reverse();
+    labels.join(".")
 }
 
 
