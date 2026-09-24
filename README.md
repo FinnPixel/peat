@@ -1,3 +1,5 @@
+[![CI](https://github.com/FinnPixel/peat/actions/workflows/ci.yml/badge.svg)](https://github.com/FinnPixel/peat/actions/workflows/ci.yml)
+
 # peat
 
 Small CLI tool that checks your browser bookmarks for dead links.
