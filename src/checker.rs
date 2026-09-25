@@ -3,7 +3,7 @@ use std::thread;
 use std::time::Duration;
 use ureq::{Agent, ResponseExt};
 
-const USER_AGENT: &str = "peat/0.1 (+https://github.com/you/peat)";
+const USER_AGENT: &str = concat!("peat/", env!("CARGO_PKG_VERSION"), " (+https://github.com/FinnPixel/peat)");
 
 const WORKERS: usize = 64;
 
