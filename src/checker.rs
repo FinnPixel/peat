@@ -1,8 +1,7 @@
-use std::sync::{Mutex};
+use std::io::{self, IsTerminal, Write};
+use std::sync::{mpsc, Mutex};
 use std::thread;
 use std::time::Duration;
-use std::io::Write;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use ureq::{Agent, ResponseExt};
 
 const USER_AGENT: &str = concat!("peat/", env!("CARGO_PKG_VERSION"), " (+https://github.com/FinnPixel/peat)");
@@ -45,11 +44,9 @@ pub struct CheckResult {
 
 
 pub fn check_all(mut urls: Vec<String>) -> Vec<CheckResult> {
-    let total = urls.len();
-    let done = AtomicUsize::new(0);
-
     urls.sort_unstable();
     urls.dedup();
+    let total = urls.len();
  
     let agent: Agent = Agent::config_builder()
         .timeout_global(Some(Duration::from_secs(10)))
@@ -61,29 +58,40 @@ pub fn check_all(mut urls: Vec<String>) -> Vec<CheckResult> {
     let queue = Mutex::new(urls.into_iter());
     let next_url = || queue.lock().unwrap().next();
  
+    let show_progress = io::stderr().is_terminal();
+    let (tx, rx) = mpsc::channel();
+    let mut done = 0;
+
     let mut results: Vec<CheckResult> = thread::scope(|scope| {
-        let handles: Vec<_> = (0..workers)
-            .map(|_| {
-                scope.spawn(|| {
-                    let mut checked = Vec::new();
-                    while let Some(url) = next_url() {
-                        let (status, detail) = check_url(&agent, &url);
-                        let n = done.fetch_add(1, Ordering::Relaxed) + 1;
-                        eprint!("\rChecking {total} urls ... {n}/{total}");
-                        let _ = std::io::stderr().flush();
-                        checked.push(CheckResult { url, status, detail });
+        for _ in 0..workers {
+            let tx = tx.clone();
+            let agent = &agent;
+            let next_url = &next_url;
+            scope.spawn(move || {
+                while let Some(url) = next_url() {
+                    let (status, detail) = check_url(agent, &url);
+                    if tx.send(CheckResult { url, status, detail }).is_err() {
+                        break;
                     }
-                    checked
-                })
+                }
+            });
+        }
+        drop(tx);
+
+        rx.iter()
+            .inspect(|_| {
+                done += 1;
+                if show_progress {
+                    eprint!("
+{done}/{total} checked");
+                    let _ = io::stderr().flush();
+                }
             })
-            .collect();
- 
-        handles
-            .into_iter()
-            .flat_map(|handle| handle.join().unwrap())
             .collect()
     });
-    eprintln!();
+    if show_progress {
+        eprintln!();
+    }
  
     results.sort_unstable_by(|a, b| a.url.cmp(&b.url));
     results
