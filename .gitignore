@@ -25,6 +25,3 @@ Thumbs.db
 /*.profraw
 /*.profdata
 /tarpaulin-report.html
-
-# Output of `cargo rf-clean`
-/cleaned.html
