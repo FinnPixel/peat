@@ -33,6 +33,10 @@ impl LinkStatus {
             LinkStatus::Unreachable => "unreachable",
         }
     }
+
+    pub fn is_dead(&self) -> bool {
+        matches!(self, LinkStatus::NotFound | LinkStatus::DnsFailure | LinkStatus::Unreachable)
+    }
 }
 
 #[derive(Debug, Clone)]

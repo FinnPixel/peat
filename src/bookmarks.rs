@@ -1,16 +1,15 @@
+use std::collections::HashMap;
+use std::ops::Range;
 use std::path::Path;
+
+use crate::checker::{CheckResult, LinkStatus};
 
 const URL_TERMINATORS: [char; 5] = [')', '>', ']', '"', '\''];
 const TRAILING_PUNCTUATION: [char; 6] = ['.', ',', ';', ':', '!', '?'];
 
 
 pub fn extract_urls(file_path: &str, content: &str) -> Vec<String> {
-    let extension = Path::new(file_path)
-        .extension()
-        .and_then(|ext| ext.to_str())
-        .map(str::to_ascii_lowercase);
-
-    let mut urls = match extension.as_deref() {
+    let mut urls = match extension(file_path).as_deref() {
         Some("html" | "htm") => extract_urls_from_bookmark_html(content),
         Some("md" | "markdown") => extract_urls_from_markdown(content),
         _ => extract_urls_from_lines(content),
@@ -21,20 +20,65 @@ pub fn extract_urls(file_path: &str, content: &str) -> Vec<String> {
 }
 
 
+pub fn is_html(file_path: &str) -> bool {
+    matches!(extension(file_path).as_deref(), Some("html" | "htm"))
+}
+
+
+pub fn clean_html(content: &str, results: &[CheckResult]) -> String {
+    let by_url: HashMap<&str, &CheckResult> =
+        results.iter().map(|r| (r.url.as_str(), r)).collect();
+    let mut cleaned = String::with_capacity(content.len());
+    let mut dropped_previous = false;
+
+    for line in content.split_inclusive('\n') {
+        if dropped_previous && starts_with_ignore_case(line.trim_start(), "<DD>") {
+            continue;
+        }
+        dropped_previous = false;
+
+        let Some(href) = href_range(line) else {
+            cleaned.push_str(line);
+            continue;
+        };
+        match by_url.get(&line[href.clone()]) {
+            Some(result) if result.status.is_dead() => dropped_previous = true,
+            Some(result) if result.status == LinkStatus::Moved => {
+                cleaned.push_str(&line[..href.start]);
+                cleaned.push_str(&result.detail);
+                cleaned.push_str(&line[href.end..]);
+            }
+            _ => cleaned.push_str(line),
+        }
+    }
+    cleaned
+}
+
+
+fn extension(file_path: &str) -> Option<String> {
+    Path::new(file_path)
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(str::to_ascii_lowercase)
+}
+
+
 fn extract_urls_from_bookmark_html(content: &str) -> Vec<String> {
     println!("Parsing {} bytes of HTML...\n", content.len());
     content
         .lines()
-        .filter_map(|line| {
-            let start = line
-                .find("HREF=\"")
-                .or_else(|| line.find("href=\""))? + 6;
-            let rest = &line[start..];
-            let (url, _) = rest.split_once('"')?;
-            Some(url.to_string())
-        })
+        .filter_map(|line| Some(line[href_range(line)?].to_string()))
         .filter(|url| is_http_url(url))
         .collect()
+}
+
+
+fn href_range(line: &str) -> Option<Range<usize>> {
+    let start = line
+        .find("HREF=\"")
+        .or_else(|| line.find("href=\""))? + 6;
+    let len = line[start..].find('"')?;
+    Some(start..start + len)
 }
 
 
@@ -78,9 +122,13 @@ fn scan_http_urls(line: &str) -> Vec<String> {
 }
 
 
+fn starts_with_ignore_case(text: &str, prefix: &str) -> bool {
+    text.get(..prefix.len()).is_some_and(|start| start.eq_ignore_ascii_case(prefix))
+}
+
+
 fn is_http_url(url: &str) -> bool {
     ["http://", "https://"].iter().any(|scheme| {
-        url.len() > scheme.len()
-            && url.get(..scheme.len()).is_some_and(|prefix| prefix.eq_ignore_ascii_case(scheme))
+        url.len() > scheme.len() && starts_with_ignore_case(url, scheme)
     })
 }
