@@ -82,8 +82,7 @@ pub fn check_all(mut urls: Vec<String>) -> Vec<CheckResult> {
             .inspect(|_| {
                 done += 1;
                 if show_progress {
-                    eprint!("
-{done}/{total} checked");
+                    eprint!("\r{done}/{total} checked");
                     let _ = io::stderr().flush();
                 }
             })
