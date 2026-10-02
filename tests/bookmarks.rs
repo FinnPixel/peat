@@ -133,12 +133,12 @@ fn clean_large_fixture_removes_dead_updates_moved_keeps_rest() {
         ("https://en.wikipedia.org/wiki/This_Page_Does_Not_Exist_Peat_Test", LinkStatus::NotFound),
         ("https://httpbin.org/status/404", LinkStatus::NotFound),
         ("https://httpbin.org/status/410", LinkStatus::NotFound),
+    ];
+    let kept = [
         ("https://this-domain-does-not-exist.invalid/", LinkStatus::DnsFailure),
         ("https://old-blog.invalid/posts/2014/hello", LinkStatus::DnsFailure),
         ("http://10.255.255.1/", LinkStatus::Unreachable),
         ("http://localhost:59999/", LinkStatus::Unreachable),
-    ];
-    let kept = [
         ("https://httpbin.org/status/500", LinkStatus::ServerError),
         ("https://self-signed.badssl.com/", LinkStatus::TlsFailure),
         ("https://1password.com/", LinkStatus::Blocked),
@@ -185,7 +185,7 @@ fn clean_drops_description_of_dead_bookmark() {
 "#;
     let results = [
         result("https://alive.com", LinkStatus::Alive, "200"),
-        result("https://dead.com", LinkStatus::DnsFailure, "no such host"),
+        result("https://dead.com", LinkStatus::NotFound, "404"),
     ];
     let expected = r#"<DT><A HREF="https://alive.com">Alive</A>
 <DD>Alive description

@@ -24,7 +24,7 @@ peat <path-to-bookmarks.html>   # or a .txt/.md list of URLs
 peat bookmarks.html --clean cleaned.html
 ```
 
-This writes a copy of your bookmarks with dead links removed and moved links pointing at their new URL. Folders, titles, order, and blocked links stay as they are.
+This writes a copy of your bookmarks with dead links removed and moved links pointing at their new URL.
 
 ## Run without installing
 
