@@ -91,9 +91,8 @@ fn escape_html(s: &str) -> String {
 
 
 fn href_range(line: &str) -> Option<Range<usize>> {
-    let start = line
-        .find("HREF=\"")
-        .or_else(|| line.find("href=\""))? + 6;
+    const ATTR: &str = "href=\"";
+    let start = line.to_ascii_lowercase().find(ATTR)? + ATTR.len();
     let len = line[start..].find('"')?;
     Some(start..start + len)
 }

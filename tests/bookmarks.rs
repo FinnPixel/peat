@@ -19,8 +19,9 @@ fn without_lines_containing(content: &str, urls: &[&str]) -> String {
 fn html_extracts_hrefs() {
     let content = r#"<DT><A HREF="https://b.com">B</A>
 <DT><a href="https://a.com">A</a>
+<DT><A Href="https://c.com">C</A>
 <DT><H3>Folder</H3>"#;
-    assert_eq!(extract_urls("x.html", content), ["https://a.com", "https://b.com"]);
+    assert_eq!(extract_urls("x.html", content), ["https://a.com", "https://b.com", "https://c.com"]);
 }
 
 
