@@ -3,15 +3,24 @@ use std::{env, fs, process};
 use peat::{bookmarks, checker, output};
 use peat::checker::LinkStatus;
 
+const USAGE: &str = "Usage: peat <path-to-bookmarks.html|.txt|.md> [--clean <output.html>]";
 
 fn main() {
     let args: Vec<String> = env::args().collect();
 
     let (file_path, clean_path) = match args.as_slice() {
+        [_, flag] if flag == "--help" || flag == "-h" => {
+            println!("peat {}\nCheck your bookmarks for dead links.\n\n{USAGE}", env!("CARGO_PKG_VERSION"));
+            process::exit(0);
+        }
+        [_, flag] if flag == "--version" || flag == "-V" => {
+            println!("peat {}", env!("CARGO_PKG_VERSION"));
+            process::exit(0);
+        }
         [_, file] => (file, None),
         [_, file, flag, out] if flag == "--clean" => (file, Some(out)),
         _ => {
-            eprintln!("Usage: peat <path-to-bookmarks.html|.txt|.md> [--clean <output.html>]");
+            eprintln!("{USAGE}");
             process::exit(1);
         }
     };
