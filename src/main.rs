@@ -32,6 +32,13 @@ fn main() {
     output::print_report(&results);
 
     if let Some(clean_path) = clean_path {
+        let failed = results.iter()
+            .filter(|r| matches!(r.status, LinkStatus::DnsFailure | LinkStatus::Unreachable))
+            .count();
+        if failed * 2 > results.len() {
+            eprintln!("Most links failed. Are you offline? Not writing {clean_path}.");
+            process::exit(1);
+        }
         fs::write(clean_path, bookmarks::clean_html(&content, &results)).unwrap_or_else(|err| {
             eprintln!("Error writing file '{clean_path}': {err}");
             process::exit(1);

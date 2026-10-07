@@ -41,11 +41,11 @@ pub fn clean_html(content: &str, results: &[CheckResult]) -> String {
             cleaned.push_str(line);
             continue;
         };
-        match by_url.get(&line[href.clone()]) {
+        match by_url.get(unescape_html(&line[href.clone()]).as_str()) {
             Some(result) if result.status.is_dead() => dropped_previous = true,
             Some(result) if result.status == LinkStatus::Moved => {
                 cleaned.push_str(&line[..href.start]);
-                cleaned.push_str(&result.detail);
+                cleaned.push_str(&escape_html(&result.detail));
                 cleaned.push_str(&line[href.end..]);
             }
             _ => cleaned.push_str(line),
@@ -67,16 +67,32 @@ fn extract_urls_from_bookmark_html(content: &str) -> Vec<String> {
     println!("Parsing {} bytes of HTML...\n", content.len());
     content
         .lines()
-        .filter_map(|line| Some(line[href_range(line)?].to_string()))
+        .filter_map(|line| Some(unescape_html(&line[href_range(line)?])))
         .filter(|url| is_http_url(url))
         .collect()
 }
 
 
+fn unescape_html(s: &str) -> String {
+    s.replace("&quot;", "\"")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&#39;", "'")
+        .replace("&amp;", "&")
+}
+
+
+fn escape_html(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('"', "&quot;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+}
+
+
 fn href_range(line: &str) -> Option<Range<usize>> {
-    let start = line
-        .find("HREF=\"")
-        .or_else(|| line.find("href=\""))? + 6;
+    const ATTR: &str = "href=\"";
+    let start = line.to_ascii_lowercase().find(ATTR)? + ATTR.len();
     let len = line[start..].find('"')?;
     Some(start..start + len)
 }
