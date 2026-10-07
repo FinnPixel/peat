@@ -17,6 +17,10 @@ pub fn print_report(results: &[CheckResult]) {
     println!("Total: {} URLs.\n", results.len());
 
     for status in ORDER {
+        if status == LinkStatus::Alive {
+            continue;
+        }
+
         let group: Vec<&CheckResult> =
             results.iter().filter(|r| r.status == status).collect();
 
@@ -26,9 +30,7 @@ pub fn print_report(results: &[CheckResult]) {
 
         println!("{} ({}):", status.label(), group.len());
         for result in group {
-            if status == LinkStatus::Alive {
-                println!("  {}", result.url);
-            } else if status == LinkStatus::Moved {
+            if status == LinkStatus::Moved {
                 println!("  {} → {}", result.url, result.detail);
             } else {
                 println!("  {} ({})", result.url, result.detail);
@@ -36,4 +38,7 @@ pub fn print_report(results: &[CheckResult]) {
         }
         println!();
     }
+
+    let alive = results.iter().filter(|r| r.status == LinkStatus::Alive).count();
+    println!("alive: {alive}");
 }
