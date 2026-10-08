@@ -30,6 +30,17 @@ fn main() {
         process::exit(1);
     }
 
+    if let Some(out) = clean_path {
+        let same_file = fs::canonicalize(out)
+            .ok()
+            .zip(fs::canonicalize(file_path).ok())
+            .is_some_and(|(a, b)| a == b);
+        if same_file {
+            eprintln!("--clean would overwrite '{file_path}'. Choose a different output file.");
+            process::exit(1);
+        }
+    }
+
     let content = fs::read_to_string(file_path).unwrap_or_else(|err| {
         eprintln!("Error reading file '{file_path}': {err}");
         process::exit(1);
