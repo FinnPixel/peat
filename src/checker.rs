@@ -156,6 +156,13 @@ fn attempt_once(agent: &Agent, url: &str) -> (LinkStatus, String) {
 
 fn is_real_move(original: &str, final_url: &str) -> bool {
     let (orig_host, orig_path) = host_and_path(original);
+    if !orig_host.is_empty()
+        && final_url
+            .split_once('?')
+            .is_some_and(|(_, query)| query.to_ascii_lowercase().contains(&orig_host))
+    {
+        return false;
+    }
     let (final_host, final_path) = host_and_path(final_url);
     if site(&orig_host) != site(&final_host) {
         return true;
