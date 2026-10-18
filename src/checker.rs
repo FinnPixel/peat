@@ -1,3 +1,4 @@
+use std::collections::{BTreeMap, VecDeque};
 use std::io::{self, IsTerminal, Write};
 use std::sync::{mpsc, Mutex};
 use std::thread;
@@ -47,9 +48,8 @@ pub struct CheckResult {
 }
 
 
-pub fn check_all(mut urls: Vec<String>) -> Vec<CheckResult> {
-    urls.sort_unstable();
-    urls.dedup();
+pub fn check_all(urls: Vec<String>) -> Vec<CheckResult> {
+    let urls = interleave_by_host(urls);
     let total = urls.len();
  
     let agent: Agent = Agent::config_builder()
@@ -98,6 +98,26 @@ pub fn check_all(mut urls: Vec<String>) -> Vec<CheckResult> {
  
     results.sort_unstable_by(|a, b| a.url.cmp(&b.url));
     results
+}
+
+
+fn interleave_by_host(urls: Vec<String>) -> Vec<String> {
+    let mut by_host: BTreeMap<String, VecDeque<String>> = BTreeMap::new();
+    for url in urls {
+        let (host, _) = host_and_path(&url);
+        by_host.entry(host).or_default().push_back(url);
+    }
+
+    let mut out = Vec::new();
+    while !by_host.is_empty() {
+        by_host.retain(|_, queue| {
+            if let Some(url) = queue.pop_front() {
+                out.push(url);
+            }
+            !queue.is_empty()
+        });
+    }
+    out
 }
 
 
